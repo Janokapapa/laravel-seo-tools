@@ -1,0 +1,31 @@
+{
+    "name": "jandev/laravel-seo-tools",
+    "description": "SEO tools for Laravel: meta tags, Open Graph, JSON-LD schema, sitemap, redirects, and Filament admin panel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jan",
+            "email": "jan@jandev.eu"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0",
+        "filament/filament": "^4.0",
+        "spatie/laravel-sitemap": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "JanDev\\SeoTools\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "JanDev\\SeoTools\\SeoToolsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}

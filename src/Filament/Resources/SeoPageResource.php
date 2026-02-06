@@ -6,21 +6,24 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Select;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use JanDev\SeoTools\Models\SeoPage;
 use JanDev\SeoTools\Filament\Resources\SeoPageResource\Pages;
+use UnitEnum;
 
 class SeoPageResource extends Resource
 {
     protected static ?string $model = SeoPage::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static ?string $navigationGroup = 'SEO';
+    protected static string|UnitEnum|null $navigationGroup = 'SEO';
 
     protected static ?int $navigationSort = 1;
 

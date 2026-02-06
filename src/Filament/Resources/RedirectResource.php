@@ -2,24 +2,27 @@
 
 namespace JanDev\SeoTools\Filament\Resources;
 
+use BackedEnum;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use JanDev\SeoTools\Models\Redirect;
 use JanDev\SeoTools\Filament\Resources\RedirectResource\Pages;
+use UnitEnum;
 
 class RedirectResource extends Resource
 {
     protected static ?string $model = Redirect::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-uturn-right';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowUturnRight;
 
-    protected static ?string $navigationGroup = 'SEO';
+    protected static string|UnitEnum|null $navigationGroup = 'SEO';
 
     protected static ?int $navigationSort = 2;
 

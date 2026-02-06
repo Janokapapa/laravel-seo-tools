@@ -2,10 +2,9 @@
 
 namespace JanDev\SeoTools\Filament\Components;
 
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
 
 class SeoFieldsSection
 {

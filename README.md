@@ -1,26 +1,26 @@
 # Laravel SEO Tools
 
-SEO csomag Laravel 11 + Filament 4 projektekhez. Meta tagek, Open Graph, JSON-LD schema, sitemap, redirectek, Filament admin panel.
+SEO package for Laravel 11 + Filament 4 projects. Meta tags, Open Graph, JSON-LD schema, sitemap, redirects, and Filament admin panel.
 
-## Telepites
+## Installation
 
 ```bash
 composer require jandev/laravel-seo-tools
 ```
 
-Config publikalas:
+Publish the config:
 
 ```bash
 php artisan vendor:publish --tag=seo-tools-config
 ```
 
-Migraciok automatikusan futnak (package discovery), vagy manualis:
+Migrations run automatically (package discovery), or manually:
 
 ```bash
 php artisan migrate
 ```
 
-## Fajlstruktura
+## File Structure
 
 ```
 laravel-seo-tools/
@@ -31,7 +31,7 @@ laravel-seo-tools/
 │   └── 2024_01_01_000002_create_redirects_table.php
 ├── resources/views/components/
 │   ├── head.blade.php          # canonical, meta desc, keywords, robots
-│   ├── og.blade.php            # og:* + twitter card tagek
+│   ├── og.blade.php            # og:* + twitter card tags
 │   ├── schema.blade.php        # JSON-LD output (custom + Organization)
 │   └── breadcrumbs.blade.php   # BreadcrumbList JSON-LD
 └── src/
@@ -54,80 +54,80 @@ laravel-seo-tools/
             └── RedirectResource.php
 ```
 
-## Komponensek
+## Components
 
 ### 1. HasSeoFields Trait
 
-Modellekre rakjuk (pl. Service, Project). Feltetelezi, hogy a modell tablaján vannak ezek a mezok:
+Applied to models (e.g. Service, Project). Expects these columns on the model's table:
 
 - `meta_title` (string, nullable)
 - `meta_description` (text, nullable)
 - `meta_keywords` (string, nullable)
 - `og_image` (string, nullable)
 
-Metodusok:
+Methods:
 
 ```php
 $model->getSeoTitle();       // meta_title ?? title ?? config default
 $model->getSeoDescription(); // meta_description ?? description ?? config default
 $model->getOgImage();        // og_image ?? config default
-$model->toSeoArray();        // teljes SEO tomb a middleware/view szamara
+$model->toSeoArray();        // full SEO array for middleware/views
 ```
 
-Fallback logika: ha `meta_title` ures, a modell `title` mezojat hasznalja. Ha az is ures, config default.
+Fallback logic: if `meta_title` is empty, uses the model's `title` field. If that's also empty, falls back to config default.
 
 ### 2. SeoPage Model
 
-Statikus oldalakhoz (home, contact, projects) - amelyeknek nincs modell bindingje.
+For static pages (home, contact, projects) that don't have model binding.
 
-Tabla: `seo_pages`
+Table: `seo_pages`
 
-| Mezo | Tipus | Leiras |
-|------|-------|--------|
-| route_name | string, unique | Laravel route nev (pl. "home", "contact") |
+| Column | Type | Description |
+|--------|------|-------------|
+| route_name | string, unique | Laravel route name (e.g. "home", "contact") |
 | meta_title | string, nullable | |
 | meta_description | text, nullable | |
 | meta_keywords | string, nullable | |
 | og_title | string, nullable | |
 | og_description | text, nullable | |
 | og_image | string, nullable | |
-| schema_type | string, nullable | WebPage, FAQPage, ContactPage, stb. |
-| schema_data | JSON, nullable | Egyedi schema.org adat |
+| schema_type | string, nullable | WebPage, FAQPage, ContactPage, etc. |
+| schema_data | JSON, nullable | Custom schema.org data |
 | is_indexable | boolean, default true | false = noindex, nofollow |
 
-Cache: 1 ora, route_name alapjan. Automatikusan torlodik save/delete eseten.
+Cache: 1 hour, by route_name. Automatically cleared on save/delete.
 
 ```php
 $seoPage = SeoPage::findByRoute('home'); // cached
-$seoPage->toSeoArray(); // ugyanaz a formatum mint HasSeoFields
+$seoPage->toSeoArray(); // same format as HasSeoFields
 ```
 
 ### 3. Redirect Model
 
-301/302 atiranyitasok + hit counter.
+301/302 redirects with hit counter.
 
-Tabla: `redirects`
+Table: `redirects`
 
-| Mezo | Tipus | Leiras |
-|------|-------|--------|
-| source_path | string, unique | Honnan (pl. "/regi-oldal") |
-| destination_path | string | Hova (pl. "/uj-oldal" vagy full URL) |
-| status_code | int, default 301 | 301 vagy 302 |
-| hits | unsigned int, default 0 | Hanyszor lett hasznalva |
-| last_hit_at | timestamp, nullable | Utolso hasznalat |
-| is_active | boolean, default true | Ki/be kapcsolhato |
+| Column | Type | Description |
+|--------|------|-------------|
+| source_path | string, unique | From path (e.g. "/old-page") |
+| destination_path | string | To path (e.g. "/new-page" or full URL) |
+| status_code | int, default 301 | 301 or 302 |
+| hits | unsigned int, default 0 | Times used |
+| last_hit_at | timestamp, nullable | Last used at |
+| is_active | boolean, default true | Can be toggled on/off |
 
-Cache: 1 ora, path alapjan.
+Cache: 1 hour, by path.
 
 ### 4. InjectSeoMeta Middleware
 
-Automatikusan megoszja a `$seo` valtozot minden view-val. Prioritas:
+Automatically shares the `$seo` variable with all views. Priority:
 
-1. **Model HasSeoFields trait-tel** - ha a route-ban van model binding es a modell hasznalja a traitet
-2. **SeoPage rekord** - ha van `seo_pages` bejegyzes az aktualis route_name-hez
+1. **Model with HasSeoFields trait** - if the route has model binding and the model uses the trait
+2. **SeoPage record** - if there's a `seo_pages` entry for the current route_name
 3. **Config defaults** - `seo-tools.defaults.*`
 
-A `$seo` tomb mezoi:
+The `$seo` array fields:
 
 ```php
 [
@@ -138,18 +138,18 @@ A `$seo` tomb mezoi:
     'og_description' => '...',
     'og_image' => '...',
     'robots' => 'index, follow',
-    'schema_type' => null,  // SeoPage-bol jon
-    'schema_data' => null,  // SeoPage-bol jon
+    'schema_type' => null,  // from SeoPage
+    'schema_data' => null,  // from SeoPage
 ]
 ```
 
 ### 5. HandleRedirects Middleware
 
-Ellenorzi a `redirects` tablat minden requestnel. Ha talalat van es aktiv, atiranyit es noveli a hit countert.
+Checks the `redirects` table on every request. If a match is found and active, redirects and increments the hit counter.
 
-### 6. Blade Komponensek
+### 6. Blade Components
 
-A layoutban hasznaljuk:
+Use in your layout:
 
 ```blade
 <head>
@@ -160,7 +160,7 @@ A layoutban hasznaljuk:
 </head>
 ```
 
-Breadcrumbs (oldalon belul):
+Breadcrumbs (within a page):
 
 ```blade
 <x-seo::breadcrumbs :items="[
@@ -172,42 +172,42 @@ Breadcrumbs (oldalon belul):
 
 ### 7. SeoFieldsSection (Filament)
 
-Ujrahasznalhato form section barmely Filament resource-hoz:
+Reusable form section for any Filament resource:
 
 ```php
 use JanDev\SeoTools\Filament\Components\SeoFieldsSection;
 
-// Resource formban:
+// In a resource form:
 SeoFieldsSection::make()
 ```
 
-Tartalmazza:
-- meta_title (max 60 char, helper text)
-- meta_description (max 160 char, textarea, helper text)
+Includes:
+- meta_title (max 60 char, with helper text)
+- meta_description (max 160 char, textarea, with helper text)
 - meta_keywords (comma-separated)
-- og_image (URL mezo)
+- og_image (URL field)
 
-Collapsible section, "SEO" cimmel, magnifying glass iconnal.
+Collapsible section, titled "SEO", with magnifying glass icon.
 
 ### 8. Filament Resources
 
-- **SeoPageResource** (`/admin/seo-pages`) - CRUD statikus oldalak SEO adataihoz
-- **RedirectResource** (`/admin/redirects`) - CRUD redirectekhez, hit counter megjelenitese
+- **SeoPageResource** (`/admin/seo-pages`) - CRUD for static page SEO data
+- **RedirectResource** (`/admin/redirects`) - CRUD for redirects with hit counter display
 
-Mindketto az "SEO" navigation group alatt jelenik meg.
+Both appear under the "SEO" navigation group.
 
 ### 9. Artisan Commands
 
 ```bash
-# Sitemap generalas a configbol
+# Generate sitemap from config
 php artisan seo:sitemap
 
-# SEO mezok hozzaadasa egy tablához (migration stub)
+# Add SEO fields to an existing table (generates migration stub)
 php artisan seo:add-fields services
-# -> Letrehozza: database/migrations/xxxx_add_seo_fields_to_services_table.php
+# -> Creates: database/migrations/xxxx_add_seo_fields_to_services_table.php
 ```
 
-## Konfiguracio
+## Configuration
 
 `config/seo-tools.php`:
 
@@ -228,7 +228,7 @@ return [
             'url' => 'https://jandev.eu',
             'logo' => '/logo-nav.webp',
             'email' => 'jan@jandev.eu',
-            'same_as' => [], // social URLs
+            'same_as' => [], // social profile URLs
         ],
     ],
 
@@ -247,14 +247,14 @@ return [
 
     'cache' => [
         'enabled' => true,
-        'ttl' => 3600, // 1 ora
+        'ttl' => 3600, // 1 hour
     ],
 ];
 ```
 
-## Integracio uj projektbe
+## Integration into a New Project
 
-### 1. Composer + config
+### 1. Composer + Config
 
 ```bash
 composer require jandev/laravel-seo-tools
@@ -262,7 +262,7 @@ php artisan vendor:publish --tag=seo-tools-config
 php artisan migrate
 ```
 
-### 2. Middleware regisztracio (`bootstrap/app.php`)
+### 2. Register Middleware (`bootstrap/app.php`)
 
 ```php
 ->withMiddleware(function (Middleware $middleware) {
@@ -273,7 +273,7 @@ php artisan migrate
 })
 ```
 
-### 3. Filament plugin (`AdminPanelProvider.php`)
+### 3. Register Filament Plugin (`AdminPanelProvider.php`)
 
 ```php
 use JanDev\SeoTools\Filament\SeoToolsPlugin;
@@ -283,7 +283,7 @@ use JanDev\SeoTools\Filament\SeoToolsPlugin;
 ])
 ```
 
-### 4. Layout frissites
+### 4. Update Layout
 
 ```blade
 <title>{{ $seo['title'] ?? 'Default' }}</title>
@@ -292,7 +292,7 @@ use JanDev\SeoTools\Filament\SeoToolsPlugin;
 <x-seo::schema />
 ```
 
-### 5. Modellekre SEO mezok
+### 5. Add SEO Fields to Models
 
 ```bash
 php artisan seo:add-fields services
@@ -308,22 +308,22 @@ class Service extends Model
     use HasSeoFields;
 
     protected $fillable = [
-        // ... meglevo mezok ...
+        // ... existing fields ...
         'meta_title', 'meta_description', 'meta_keywords', 'og_image',
     ];
 }
 ```
 
-### 6. Filament formba SEO section
+### 6. Add SEO Section to Filament Forms
 
 ```php
 use JanDev\SeoTools\Filament\Components\SeoFieldsSection;
 
-// Form schema-ban:
+// In form schema:
 SeoFieldsSection::make()
 ```
 
-### 7. Sitemap scheduling (`routes/console.php`)
+### 7. Schedule Sitemap Generation (`routes/console.php`)
 
 ```php
 use Illuminate\Support\Facades\Schedule;
@@ -331,7 +331,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('seo:sitemap')->daily();
 ```
 
-### 8. robots.txt
+### 8. Update robots.txt
 
 ```
 User-agent: *
@@ -340,22 +340,22 @@ Disallow: /admin/
 Sitemap: https://yourdomain.com/sitemap.xml
 ```
 
-## jandev-laravel specifikus dolgok
+## jandev-laravel Specific Details
 
-### Service tabla bovites
+### Service Table Extension
 
-A service oldalak tartalma (ami korabban hardcoded volt a blade-ben) DB-be kerult:
+Service page content (previously hardcoded in blade templates) was moved to the database:
 
-| Mezo | Tipus | Leiras |
-|------|-------|--------|
+| Column | Type | Description |
+|--------|------|-------------|
 | faqs | JSON | `[{question, answer}, ...]` |
 | benefits | JSON | `[{icon, title, description}, ...]` |
 | process_steps | JSON | `[{title, description}, ...]` |
-| primary_color | string | Hex szin (pl. `#6366f1`) |
-| secondary_color | string | Hex szin (pl. `#ec4899`) |
-| gradient_color | string | CSS gradient (pl. `linear-gradient(135deg, #6366f1, #ec4899)`) |
+| primary_color | string | Hex color (e.g. `#6366f1`) |
+| secondary_color | string | Hex color (e.g. `#ec4899`) |
+| gradient_color | string | CSS gradient (e.g. `linear-gradient(135deg, #6366f1, #ec4899)`) |
 
-Migraciok:
+Migrations:
 - `2026_02_06_104920_add_content_and_seo_fields_to_services_table`
 - `2026_02_06_104934_add_seo_fields_to_projects_table`
 - `2026_02_06_105057_seed_service_content_data` (hardcoded content -> DB)
@@ -368,27 +368,27 @@ Tabs layout:
 - **Appearance**: ColorPicker (primary, secondary, gradient)
 - **SEO**: SeoFieldsSection
 
-### service.blade.php refaktor
+### service.blade.php Refactoring
 
-- Hardcoded `$colors`, `$faqs`, `$benefits` PHP tombok torolve
-- Helyuk: `$service->faqs`, `$service->benefits`, `$service->process_steps`, `$service->primary_color`
-- Hex-to-RGB konverzio a CSS rgba() fuggvenyekhez PHP-ban
-- JSON-LD schema hozzaadva: Service + FAQPage + BreadcrumbList
-- FAQ kulcsok: `question`/`answer` (korabban `q`/`a`)
-- Benefit kulcsok: `description` (korabban `desc`)
+- Hardcoded `$colors`, `$faqs`, `$benefits` PHP arrays removed
+- Replaced with: `$service->faqs`, `$service->benefits`, `$service->process_steps`, `$service->primary_color`
+- Hex-to-RGB conversion for CSS rgba() functions done in PHP
+- JSON-LD schema added: Service + FAQPage + BreadcrumbList
+- FAQ keys changed: `question`/`answer` (previously `q`/`a`)
+- Benefit keys changed: `description` (previously `desc`)
 
-### Szinek per service
+### Colors per Service
 
 | Service | Primary | Secondary | Gradient |
 |---------|---------|-----------|----------|
-| web-development | #6366f1 | #ec4899 | 135deg indigo->pink |
-| ubuntu-admin | #E95420 | #ff7043 | 135deg ubuntu orange->light orange |
-| devops | #06b6d4 | #10b981 | 135deg cyan->emerald |
+| web-development | #6366f1 | #ec4899 | 135deg indigo -> pink |
+| ubuntu-admin | #E95420 | #ff7043 | 135deg ubuntu orange -> light orange |
+| devops | #06b6d4 | #10b981 | 135deg cyan -> emerald |
 
-## Technikai megjegyzesek
+## Technical Notes
 
-- Filament 4 property tipusok: `string|BackedEnum|null` (navigationIcon), `string|UnitEnum|null` (navigationGroup)
-- A csomag `Heroicon::OutlinedDocumentText` es `Heroicon::OutlinedArrowUturnRight` enumokat hasznal ikonokhoz
-- Cache automatikusan torlodik model save/delete eseten (booted() events)
-- A sitemap `spatie/laravel-sitemap` wrappere, model scope-ot (`scopeActive`) automatikusan hasznalja ha letezik
-- Lokalis fejleszteshez path repo (symlink), production-hoz VCS repo a composer.json-ban
+- Filament 4 property types: `string|BackedEnum|null` (navigationIcon), `string|UnitEnum|null` (navigationGroup)
+- The package uses `Heroicon::OutlinedDocumentText` and `Heroicon::OutlinedArrowUturnRight` enums for icons
+- Cache is automatically cleared on model save/delete (via booted() events)
+- Sitemap is a `spatie/laravel-sitemap` wrapper, automatically uses model scope (`scopeActive`) if it exists
+- For local development use path repo (symlink), for production use VCS repo in composer.json
